@@ -1459,9 +1459,9 @@ LiteGraph.registerNodeType("basic/jsonparse", JSONParse);
     Watch.title = "Watch";
     Watch.desc = "Show value of input";
 
-    Watch.prototype.onExecute = function() {
+    Watch.prototype.onExecute = async function() {
         if (this.inputs[0]) {
-            this.value = this.getInputData(0);
+            this.value = await this.getInputData(0);
         }
     };
 

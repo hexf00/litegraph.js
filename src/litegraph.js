@@ -427,9 +427,9 @@
             var classobj = Function(code);
             classobj.title = name.split("/").pop();
             classobj.desc = "Generated from " + func.name;
-            classobj.prototype.onExecute = function onExecute() {
+            classobj.prototype.onExecute = async function onExecute() {
                 for (var i = 0; i < params.length; ++i) {
-                    params[i] = this.getInputData(i);
+                    params[i] = await this.getInputData(i);
                 }
                 var r = func.apply(this, params);
                 this.setOutputData(0, r);
@@ -1051,7 +1051,7 @@
      * @param {number} limit max number of nodes to execute (used to execute from start to a node)
      */
 
-    LGraph.prototype.runStep = function(num, do_not_catch_errors, limit ) {
+    LGraph.prototype.runStep = async function(num, do_not_catch_errors, limit ) {
         num = num || 1;
 
         var start = LiteGraph.getTime();
@@ -1079,7 +1079,7 @@
                         node.executePendingActions();
                     if (node.mode == LiteGraph.ALWAYS && node.onExecute) {
                         //wrap node.onExecute();
-						node.doExecute();
+						await node.doExecute();
                     }
                 }
 
@@ -1101,7 +1101,7 @@
                         if(LiteGraph.use_deferred_actions && node._waiting_actions && node._waiting_actions.length)
                             node.executePendingActions();
                         if (node.mode == LiteGraph.ALWAYS && node.onExecute) {
-                            node.onExecute();
+                            await node.onExecute();
                         }
                     }
 
@@ -2860,7 +2860,7 @@
      * @param {boolean} force_update if set to true it will force the connected node of this slot to output data into this link
      * @return {*} data or if it is not connected returns undefined
      */
-    LGraphNode.prototype.getInputData = function(slot, force_update) {
+    LGraphNode.prototype.getInputData = async function(slot, force_update) {
         if (!this.inputs) {
             return;
         } //undefined;
@@ -2889,7 +2889,7 @@
         if (node.updateOutputData) {
             node.updateOutputData(link.origin_slot);
         } else if (node.onExecute) {
-            node.onExecute();
+            await node.onExecute();
         }
 
         return link.data;
@@ -2933,7 +2933,7 @@
      * @param {boolean} force_update if set to true it will force the connected node of this slot to output data into this link
      * @return {*} data or if it is not connected returns null
      */
-    LGraphNode.prototype.getInputDataByName = function(
+    LGraphNode.prototype.getInputDataByName = async function(
         slot_name,
         force_update
     ) {
@@ -2941,7 +2941,7 @@
         if (slot == -1) {
             return null;
         }
-        return this.getInputData(slot, force_update);
+        return await this.getInputData(slot, force_update);
     };
 
     /**
@@ -3219,7 +3219,7 @@
      * @param {*} param
      * @param {*} options
      */
-    LGraphNode.prototype.doExecute = function(param, options) {
+    LGraphNode.prototype.doExecute = async function(param, options) {
         options = options || {};
         if (this.onExecute){
             
@@ -3228,7 +3228,7 @@
             
             this.graph.nodes_executing[this.id] = true; //.push(this.id);
 
-            this.onExecute(param, options);
+            await this.onExecute(param, options);
             
             this.graph.nodes_executing[this.id] = false; //.pop();
             
@@ -3303,7 +3303,7 @@
      * @param {*} param
      * @param {Number} link_id [optional] in case you want to trigger and specific output link in a slot
      */
-    LGraphNode.prototype.triggerSlot = function(slot, param, link_id, options) {
+    LGraphNode.prototype.triggerSlot = async function(slot, param, link_id, options) {
         options = options || {};
         if (!this.outputs) {
             return;
@@ -3360,7 +3360,7 @@
 				if (!options.action_call) options.action_call = this.id+"_trigg_"+Math.floor(Math.random()*9999);
                 if (node.onExecute) {
                     // -- wrapping node.onExecute(param); --
-                    node.doExecute(param, options);
+                    await node.doExecute(param, options);
                 }
 			}
 			else if (node.onAction) {
